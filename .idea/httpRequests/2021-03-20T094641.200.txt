@@ -1,1 +1,0 @@
-{smsc_status=null, from=+256723542421, message_id=100200300, to=+256723542421, smsc_id=[5e6a5251791c114cd943d8e761f2b9556deb31a677b859a345a812ebafaf9ef6]}
