@@ -1,0 +1,33 @@
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+    </appender>
+
+
+    <appender name="GCP_CLOUD" class="com.google.cloud.logging.logback.LoggingAppender">
+        <credentialsFile>/etc/chamamobile/system/operations-manager.json</credentialsFile>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+    </appender>
+
+    <appender name="ASYNC_GCP" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="GCP_CLOUD" />
+    </appender>
+
+
+    <logger name="com.antinvestor.integration" level="INFO" additivity="false" >
+        <appender-ref ref="STDOUT" />
+    </logger>
+
+    <root level="ERROR">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="ASYNC_GCP" />
+    </root>
+</configuration>

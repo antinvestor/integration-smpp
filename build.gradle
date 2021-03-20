@@ -1,0 +1,75 @@
+plugins {
+    id 'java'
+    id 'idea'
+    id 'application'
+    id 'com.google.cloud.tools.jib' version '2.7.1'
+}
+
+group 'com.antinvestor.integration'
+version 'v1.0.0'
+
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
+
+mainClassName = 'com.antinvestor.integration.smpp.Application'
+
+application {
+    mainClassName = 'com.antinvestor.integration.smpp.Application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+def camelVersion = '3.8.0'
+
+dependencies {
+
+    implementation group: 'org.apache.camel', name: 'camel-core', version: camelVersion
+    implementation group: 'org.apache.camel', name: 'camel-main', version: camelVersion
+    implementation group: 'org.apache.camel', name: 'camel-management', version: camelVersion
+    implementation group: 'org.apache.camel', name: 'camel-rest', version: camelVersion
+    implementation group: 'org.apache.camel', name: 'camel-netty-http', version: camelVersion
+    implementation group: 'org.apache.camel', name: 'camel-http', version: camelVersion
+    implementation group: 'org.apache.camel', name: 'camel-jackson', version: camelVersion
+    implementation group: 'org.apache.camel', name: 'camel-opentelemetry', version: camelVersion
+    implementation group: 'org.apache.camel', name: 'camel-log', version: camelVersion
+    implementation group: 'org.apache.camel', name: 'camel-nats', version: camelVersion
+    implementation group: 'org.apache.camel', name: 'camel-google-pubsub', version: camelVersion
+    implementation group: 'org.apache.camel', name: 'camel-smpp', version: camelVersion
+
+    implementation group: 'org.apache.commons', name: 'commons-configuration2', version: '2.7'
+    implementation group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.4'
+
+    implementation group: 'com.google.cloud', name :'google-cloud-logging-logback', version: '0.120.1-alpha'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+jib {
+    // Copies files from 'src/main/custom-extra-dir' and '/home/user/jib-extras' instead of 'src/main/jib'
+    extraDirectories{
+        paths {
+            path {
+                // copies the contents of 'src/main/another/dir' into '/extras' on the container
+                from = file('config')
+                into = '/etc/smpp/config'
+            }
+        }
+    }
+}
+
+test {
+
+    include '**/*Test.*'
+    include '**/*Spec.*'
+    exclude '**/*IntegrationTest.*'
+    exclude '**/*IntegrationSpec.*'
+}
+
+task integrationTest(type: Test, description: 'Runs the integration tests', group: 'Verification') {
+    include '**/*IntegrationTest.*'
+    include '**/*IntegrationSpec.*'
+}
+
