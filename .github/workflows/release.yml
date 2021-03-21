@@ -1,0 +1,62 @@
+name: Manually create a release
+
+on:
+
+  workflow_dispatch:
+    inputs:
+      description:
+        description: 'Short explanation of the release'
+        required: true
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Initialize mandatory git config
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email noreply@github.com
+    - name: Setup release information
+      run: |
+        versionName=`sed '1q;d' versions.txt | cut -d "=" -f2 | xargs`
+        export VERSION_NAME=$versionName
+        echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+        export NEXT_VERSION_NAME=$(echo ${VERSION_NAME} | awk -F. -v OFS=. '{$NF++;print}')
+        echo "NEXT_VERSION_NAME=$NEXT_VERSION_NAME" >> $GITHUB_ENV
+    - name: Change version number and name
+      run: printf 'image_version = ${{ env.NEXT_VERSION_NAME }}\n' > versions.txt
+    - name: Commit the version manifest files
+      id: make-commit
+      run: |
+        git add versions.txt
+        git commit --message "bump release version ${{ github.event.inputs.description }}"
+        echo "::set-output name=commit::$(git rev-parse HEAD)"
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.ref }}
+    - name: Tag our release to freeze time
+      id: make-release-tag
+      run: |
+        git tag -a v${{ env.VERSION_NAME }} -m "${{ github.event.inputs.description }}"
+    - name: Push release tags
+      run: git push origin v${{ env.VERSION_NAME }}
+
+    - name: Publish Image
+      uses: matootie/github-docker@v3.1.0
+      id: publish
+      with:
+        containerRegistry: true
+        accessToken: ${{ secrets.CR_PAT }}
+        tag: |
+          ${{ github.sha }}
+          latest
+          v${{ env.VERSION_NAME }}
+
+    - name: Print Full Image URL
+      run: echo ${{ steps.publish.outputs.imageURL }}:${{ github.sha }}
