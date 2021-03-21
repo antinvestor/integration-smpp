@@ -8,6 +8,9 @@ on:
         description: 'Short explanation of the release'
         required: true
 
+env:
+  IMAGE_NAME: integration-smpp
+
 jobs:
 
   build:
@@ -47,16 +50,30 @@ jobs:
     - name: Push release tags
       run: git push origin v${{ env.VERSION_NAME }}
 
-    - name: Publish Image
-      uses: matootie/github-docker@v3.1.0
-      id: publish
+    - name: Setup jdk for compilation and docker release build version
+      uses: actions/setup-java@v1
       with:
-        containerRegistry: true
-        accessToken: ${{ secrets.CR_PAT }}
-        tag: |
-          ${{ github.sha }}
-          latest
-          v${{ env.VERSION_NAME }}
+        java-version: '11'
+    - name: Compile with Gradle
+      run: ./gradlew jibDockerBuild --image=ghcr.io/${{ github.repository }}/$IMAGE_NAME
+
+    - name: Log into GitHub Container Registry
+      run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
+
+    - name: Push image to GitHub Container Registry
+      run: |
+        IMAGE_ID=ghcr.io/${{ github.repository }}/$IMAGE_NAME
+
+        # Change all uppercase to lowercase
+        IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+        echo IMAGE_ID=$IMAGE_ID
+
+        docker tag $IMAGE_NAME $IMAGE_ID:v${{ env.VERSION_NAME }}
+        docker tag $IMAGE_NAME $IMAGE_ID:latest
+        docker tag $IMAGE_NAME $IMAGE_ID:${{ github.sha }}
+
+        docker push $IMAGE_ID:${{ github.sha }}
 
     - name: Print Full Image URL
-      run: echo ${{ steps.publish.outputs.imageURL }}:${{ github.sha }}
+      run: echo ghcr.io/${{ github.repository }}/$IMAGE_NAME:${{ github.sha }}
