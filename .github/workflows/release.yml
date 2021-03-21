@@ -55,25 +55,24 @@ jobs:
       with:
         java-version: '11'
     - name: Compile with Gradle
-      run: ./gradlew jibDockerBuild --image=ghcr.io/${{ github.repository }}/$IMAGE_NAME
+      run: ./gradlew jibDockerBuild --image=ghcr.io/${{ github.repository }}
 
     - name: Log into GitHub Container Registry
       run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
 
     - name: Push image to GitHub Container Registry
       run: |
-        IMAGE_ID=ghcr.io/${{ github.repository }}/$IMAGE_NAME
 
         # Change all uppercase to lowercase
-        IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+        IMAGE_ID=$(echo ghcr.io/${{ github.repository }} | tr '[A-Z]' '[a-z]')
 
         echo IMAGE_ID=$IMAGE_ID
 
-        docker tag $IMAGE_NAME $IMAGE_ID:v${{ env.VERSION_NAME }}
-        docker tag $IMAGE_NAME $IMAGE_ID:latest
-        docker tag $IMAGE_NAME $IMAGE_ID:${{ github.sha }}
+        docker tag ghcr.io/${{ github.repository }} $IMAGE_ID:v${{ env.VERSION_NAME }}
+        docker tag ghcr.io/${{ github.repository }} $IMAGE_ID:latest
+        docker tag ghcr.io/${{ github.repository }} $IMAGE_ID:${{ github.sha }}
 
         docker push $IMAGE_ID:${{ github.sha }}
 
     - name: Print Full Image URL
-      run: echo ghcr.io/${{ github.repository }}/$IMAGE_NAME:${{ github.sha }}
+      run: echo ghcr.io/${{ github.repository }}:${{ github.sha }}
