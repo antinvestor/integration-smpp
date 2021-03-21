@@ -73,6 +73,8 @@ jobs:
         docker tag $IMAGE_ID:${{ github.sha }} $IMAGE_ID:latest
 
         docker push $IMAGE_ID:${{ github.sha }}
+        docker push $IMAGE_ID:v${{ env.VERSION_NAME }}
+        docker push $IMAGE_ID:latest
 
     - name: Print Full Image URL
       run: echo ghcr.io/${{ github.repository }}:${{ github.sha }}
