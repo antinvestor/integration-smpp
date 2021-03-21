@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'idea'
     id 'application'
-    id 'com.google.cloud.tools.jib' version '2.7.1'
+    id 'com.google.cloud.tools.jib' version '2.8.0'
 }
 
 group 'com.antinvestor.integration'
@@ -27,6 +27,7 @@ dependencies {
 
     implementation group: 'org.apache.camel', name: 'camel-core', version: camelVersion
     implementation group: 'org.apache.camel', name: 'camel-main', version: camelVersion
+    implementation group: 'org.apache.camel', name: 'camel-health', version: camelVersion
     implementation group: 'org.apache.camel', name: 'camel-management', version: camelVersion
     implementation group: 'org.apache.camel', name: 'camel-rest', version: camelVersion
     implementation group: 'org.apache.camel', name: 'camel-netty-http', version: camelVersion

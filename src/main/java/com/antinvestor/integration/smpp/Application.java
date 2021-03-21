@@ -14,7 +14,7 @@ public final class Application {
         // use Camels Main class
         Main main = new Main();
         // and add the routes (you can specify multiple classes)
-        main.configure().addRoutesBuilder(SmppRouteBuilder.class);
+        main.configure().addRoutesBuilder(SmppRouteBuilder.class, HealthRoute.class);
         // now keep the application running until the JVM is terminated (ctrl + c or sigterm)
         main.run(args);
     }

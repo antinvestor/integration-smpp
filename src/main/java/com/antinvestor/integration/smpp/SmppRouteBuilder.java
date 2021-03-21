@@ -1,9 +1,12 @@
 package com.antinvestor.integration.smpp;
 
+import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.component.smpp.SmppConstants;
+import org.apache.camel.health.HealthCheck;
+import org.apache.camel.health.HealthCheckHelper;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.rest.RestBindingMode;
 import org.apache.commons.configuration2.CompositeConfiguration;
@@ -15,8 +18,12 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.http.util.TextUtils;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.apache.camel.Exchange.HTTP_RESPONSE_CODE;
+import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 
 public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
     private final String ROUTE_ID_HEAD = "route_id_head";
@@ -203,4 +210,6 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
         cc.addConfiguration(new EnvironmentConfiguration());
         return cc;
     }
+
+
 }
