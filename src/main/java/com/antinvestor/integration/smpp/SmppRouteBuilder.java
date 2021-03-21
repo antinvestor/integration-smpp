@@ -73,8 +73,9 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
             }
 
             String smppConnectionRoute = String.format(
-                    "smpp://%s@%s:%s?password=%s&enquireLinkTimer=%s" +
-                            "&transactionTimer=%s&systemType=%s&priorityFlag=%s&registeredDelivery=%s",
+                    "smpp://%s@%s:%s?password=%s&enquireLinkTimer=%s&transactionTimer=%s" +
+                            "&destAddrNpi=%s&destAddrTon=%s&sourceAddrNpi=%s&sourceAddrTon=%s" +
+                            "&systemType=%s&priorityFlag=%s&registeredDelivery=%s",
                     configs.getString(getRouteConfigName(activeRoute, "USERNAME")),
 
                     configs.getString(getRouteConfigName(activeRoute, "HOST")),
@@ -83,6 +84,10 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
                     configs.getString(getRouteConfigName(activeRoute, "PASSWORD")),
                     configs.getString(getRouteConfigName(activeRoute, "ENQUIRE_LINK_TIME")),
                     configs.getString(getRouteConfigName(activeRoute, "TRANSACTION_TIME")),
+                    configs.getString(getRouteConfigName(activeRoute, "DESTINATION_ADDRESS_NPI")),
+                    configs.getString(getRouteConfigName(activeRoute, "DESTINATION_ADDRESS_TON")),
+                    configs.getString(getRouteConfigName(activeRoute, "SOURCE_ADDRESS_NPI")),
+                    configs.getString(getRouteConfigName(activeRoute, "SOURCE_ADDRESS_TON")),
                     configs.getString(getRouteConfigName(activeRoute, "SYSTEM_TYPE")),
                     configs.getString(getRouteConfigName(activeRoute, "PRIORITY_FLAG")),
                     configs.getString(getRouteConfigName(activeRoute, "REGISTER_DELIVERY"))
