@@ -68,7 +68,9 @@ jobs:
 
         echo IMAGE_ID=$IMAGE_ID
 
-        docker tag ghcr.io/${{ github.repository }} $IMAGE_ID:${{ github.sha }} $IMAGE_ID:v${{ env.VERSION_NAME }} $IMAGE_ID:latest
+        docker tag ghcr.io/${{ github.repository }} $IMAGE_ID:${{ github.sha }}
+        docker tag $IMAGE_ID:${{ github.sha }} $IMAGE_ID:v${{ env.VERSION_NAME }}
+        docker tag $IMAGE_ID:${{ github.sha }} $IMAGE_ID:latest
 
         docker push $IMAGE_ID:${{ github.sha }}
 
