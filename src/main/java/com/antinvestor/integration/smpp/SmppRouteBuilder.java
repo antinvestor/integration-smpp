@@ -1,12 +1,9 @@
 package com.antinvestor.integration.smpp;
 
-import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
 import org.apache.camel.component.smpp.SmppConstants;
-import org.apache.camel.health.HealthCheck;
-import org.apache.camel.health.HealthCheckHelper;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.rest.RestBindingMode;
 import org.apache.commons.configuration2.CompositeConfiguration;
@@ -18,12 +15,8 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.http.util.TextUtils;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.apache.camel.Exchange.HTTP_RESPONSE_CODE;
-import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 
 public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
     private final String ROUTE_ID_HEAD = "route_id_head";
@@ -40,7 +33,7 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
         restConfiguration()
                 .component("netty-http")
                 .host("0.0.0.0")
-                .port(configs.getInt("PORT"))
+                .port(configs.getInt(Constants.PORT))
                 .bindingMode(RestBindingMode.auto)
                 .clientRequestValidation(true);
 
@@ -49,6 +42,22 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
                 .type(Map.class)
                 .to(getRouteConnector());
 
+        String pullQueueSecondaryUrl = configs.getString(Constants.PULL_QUEUE_SECONDARY_URL);
+        if (TextUtils.isEmpty(pullQueueSecondaryUrl)) {
+            from(pullQueueSecondaryUrl)
+                    .unmarshal().json()
+                    .split(body()).parallelProcessing()
+                    .to(getRouteConnector());
+
+        }
+
+        String pullQueueTertiaryUrl = configs.getString(Constants.PULL_QUEUE_TERTIARY_URL);
+        if (TextUtils.isEmpty(pullQueueTertiaryUrl)) {
+            from(pullQueueTertiaryUrl)
+                    .unmarshal().json()
+                    .split(body()).parallelProcessing()
+                    .to(getRouteConnector());
+        }
 
         from(getRouteConnector())
                 .bean((Processor) exchange -> {
@@ -56,17 +65,17 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
                     Message in = exchange.getIn();
                     Map<String, String> body = in.getBody(Map.class);
 
-                    in.setHeader(ROUTE_ID_HEAD, getLastMileRoute(configs, body.get(configs.getString("FIELD_ROUTE_ID"))));
-                    in.setHeader(SmppConstants.DEST_ADDR, body.get(configs.getString("FIELD_TO")));
-                    in.setHeader(SmppConstants.SOURCE_ADDR, body.get(configs.getString("FIELD_FROM")));
-                    in.setHeader("INTERNAL_SYSTEM_MESSAGE_ID", body.get(configs.getString("FIELD_MESSAGE_ID")));
-                    in.setBody(body.get(configs.getString("FIELD_DATA")));
+                    in.setHeader(ROUTE_ID_HEAD, getLastMileRoute(configs, body.get(configs.getString(Constants.FIELD_ROUTE_ID))));
+                    in.setHeader(SmppConstants.DEST_ADDR, body.get(configs.getString(Constants.FIELD_TO)));
+                    in.setHeader(SmppConstants.SOURCE_ADDR, body.get(configs.getString(Constants.FIELD_FROM)));
+                    in.setHeader("INTERNAL_SYSTEM_MESSAGE_ID", body.get(configs.getString(Constants.FIELD_MESSAGE_ID)));
+                    in.setBody(body.get(configs.getString(Constants.FIELD_DATA)));
 
                 })
                 .log(LoggingLevel.INFO, "Outbound message : ${in.headers.CamelSmppMessageType} to : ${in.headers.CamelSmppDestAddr}")
                 .toD(String.format("${header.%s}", ROUTE_ID_HEAD));
 
-        for (String activeRoute : configs.getString("ACTIVE_ROUTES").split(",")) {
+        for (String activeRoute : configs.getString(Constants.ACTIVE_ROUTES).split(",")) {
 
             if (TextUtils.isBlank(activeRoute)) {
                 continue;
@@ -76,25 +85,25 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
                     "smpp://%s@%s:%s?password=%s&enquireLinkTimer=%s&transactionTimer=%s" +
                             "&destAddrNpi=%s&destAddrTon=%s&sourceAddrNpi=%s&sourceAddrTon=%s" +
                             "&systemType=%s&priorityFlag=%s&registeredDelivery=%s",
-                    configs.getString(getRouteConfigName(activeRoute, "USERNAME")),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_USERNAME)),
 
-                    configs.getString(getRouteConfigName(activeRoute, "HOST")),
-                    configs.getString(getRouteConfigName(activeRoute, "PORT")),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_HOST)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_PORT)),
 
-                    configs.getString(getRouteConfigName(activeRoute, "PASSWORD")),
-                    configs.getString(getRouteConfigName(activeRoute, "ENQUIRE_LINK_TIME")),
-                    configs.getString(getRouteConfigName(activeRoute, "TRANSACTION_TIME")),
-                    configs.getString(getRouteConfigName(activeRoute, "DESTINATION_ADDRESS_NPI")),
-                    configs.getString(getRouteConfigName(activeRoute, "DESTINATION_ADDRESS_TON")),
-                    configs.getString(getRouteConfigName(activeRoute, "SOURCE_ADDRESS_NPI")),
-                    configs.getString(getRouteConfigName(activeRoute, "SOURCE_ADDRESS_TON")),
-                    configs.getString(getRouteConfigName(activeRoute, "SYSTEM_TYPE")),
-                    configs.getString(getRouteConfigName(activeRoute, "PRIORITY_FLAG")),
-                    configs.getString(getRouteConfigName(activeRoute, "REGISTER_DELIVERY"))
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_PASSWORD)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_ENQUIRE_LINK_TIME)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_TRANSACTION_TIME)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_DESTINATION_ADDRESS_NPI)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_DESTINATION_ADDRESS_TON)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SOURCE_ADDRESS_NPI)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SOURCE_ADDRESS_TON)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SYSTEM_TYPE)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_PRIORITY_FLAG)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_REGISTER_DELIVERY))
             );
 
 
-            long throttlingCount = configs.getLong(getRouteConfigName(activeRoute, "THROTTLING_COUNT"));
+            long throttlingCount = configs.getLong(getRouteConfigName(activeRoute, Constants.ROUTE_THROTTLING_COUNT));
             from(getLastMileRoute(configs, activeRoute))
                     .throttle(throttlingCount)
                     .enrich(smppConnectionRoute, new PreserveHeadersAggregationStrategy())
@@ -108,21 +117,21 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
                         }
 
                         Map<String, String> result = new HashMap<>();
-                        result.put(configs.getString("FIELD_TO"), in.getHeader(SmppConstants.DEST_ADDR, String.class));
-                        result.put(configs.getString("FIELD_FROM"), in.getHeader(SmppConstants.DEST_ADDR, String.class));
-                        result.put(configs.getString("FIELD_MESSAGE_ID"), in.getHeader("INTERNAL_SYSTEM_MESSAGE_ID", String.class));
-                        result.put(configs.getString("FIELD_SMSC_ID"), smppID);
-                        result.put(configs.getString("FIELD_SMSC_STATUS"), "Submitted");
+                        result.put(configs.getString(Constants.FIELD_TO), in.getHeader(SmppConstants.DEST_ADDR, String.class));
+                        result.put(configs.getString(Constants.FIELD_FROM), in.getHeader(SmppConstants.DEST_ADDR, String.class));
+                        result.put(configs.getString(Constants.FIELD_MESSAGE_ID), in.getHeader("INTERNAL_SYSTEM_MESSAGE_ID", String.class));
+                        result.put(configs.getString(Constants.FIELD_SMSC_ID), smppID);
+                        result.put(configs.getString(Constants.FIELD_SMSC_STATUS), "Submitted");
 
                         in.setBody(result, Map.class);
 
                     })
                     .choice()
-                    .when(exchange -> configs.getString(getRouteConfigName(activeRoute, "SMS_SEND_ACK_URL")).startsWith("http"))
+                    .when(exchange -> configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_ACK_URL)).startsWith("http"))
                     .marshal().json()
-                    .to(configs.getString(getRouteConfigName(activeRoute, "SMS_SEND_ACK_URL")))
+                    .to(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_ACK_URL)))
                     .otherwise()
-                    .to(configs.getString(getRouteConfigName(activeRoute, "SMS_SEND_ACK_URL")))
+                    .to(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_ACK_URL)))
                     .endChoice();
 
             from(smppConnectionRoute)
@@ -133,13 +142,13 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
                         Map<String, String> result = new HashMap<>();
 
                         if (in.getHeaders().containsKey(SmppConstants.ID)) {
-                            result.put(configs.getString("FIELD_SMSC_ID"), in.getHeader(SmppConstants.ID, String.class));
+                            result.put(configs.getString(Constants.FIELD_SMSC_ID), in.getHeader(SmppConstants.ID, String.class));
                         } else if (in.getHeaders().containsKey(SmppConstants.SEQUENCE_NUMBER)) {
-                            result.put(configs.getString("FIELD_SMSC_ID"), in.getHeader(SmppConstants.SEQUENCE_NUMBER, String.class));
+                            result.put(configs.getString(Constants.FIELD_SMSC_ID), in.getHeader(SmppConstants.SEQUENCE_NUMBER, String.class));
                         }
 
                         if (in.getHeaders().containsKey(SmppConstants.FINAL_STATUS)) {
-                            result.put(configs.getString("FIELD_SMSC_STATUS"), in.getHeader(SmppConstants.FINAL_STATUS, String.class));
+                            result.put(configs.getString(Constants.FIELD_SMSC_STATUS), in.getHeader(SmppConstants.FINAL_STATUS, String.class));
                         }
 
                         if (in.getHeaders().containsKey(SmppConstants.DELIVERED)) {
@@ -170,11 +179,11 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
 
 
                         if (in.getHeaders().containsKey(SmppConstants.DEST_ADDR)) {
-                            result.put(configs.getString("FIELD_TO"), in.getHeader(SmppConstants.DEST_ADDR, String.class));
+                            result.put(configs.getString(Constants.FIELD_TO), in.getHeader(SmppConstants.DEST_ADDR, String.class));
                         }
 
                         if (in.getHeaders().containsKey(SmppConstants.SOURCE_ADDR)) {
-                            result.put(configs.getString("FIELD_FROM"), in.getHeader(SmppConstants.SOURCE_ADDR, String.class));
+                            result.put(configs.getString(Constants.FIELD_FROM), in.getHeader(SmppConstants.SOURCE_ADDR, String.class));
                         }
 
                         result.put("text", in.getBody(String.class));
@@ -183,16 +192,16 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
 
                     }).marshal().json(JsonLibrary.Jackson).choice()
                     .when(header(SmppConstants.MESSAGE_TYPE).isEqualTo("DeliveryReceipt"))
-                    .to(configs.getString(getRouteConfigName(activeRoute, "SMS_SEND_DLR_URL")))
+                    .to(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_DLR_URL)))
                     .otherwise()
-                    .to(configs.getString(getRouteConfigName(activeRoute, "SMS_RECEIVE_URL")))
+                    .to(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_RECEIVE_URL)))
                     .endChoice();
 
         }
     }
 
     private String getLastMileRoute(CompositeConfiguration configs, String routeId) {
-        return String.format(configs.getString("LAST_MILE_CONNECTION"), routeId);
+        return String.format(configs.getString(Constants.LAST_MILE_CONNECTION), routeId);
     }
 
     private String getRouteConfigName(String routeId, String config) {
