@@ -52,7 +52,7 @@ jobs:
         run: |
           
           tags=$(echo ${{ steps.meta.outputs.tags }} | sed 's/\\n/,/g')
-          labels=$(echo ${{ steps.meta.outputs.tags }} | sed 's/\\n/,/g')
+          labels=$(echo ${{ steps.meta.outputs.labels }} | sed 's/\\n/,/g')
           
           ./gradlew jibDockerBuild --image=ghcr.io/${{ github.repository }} \
           -Djib.to.image=ghcr.io/${{ github.repository }} \
