@@ -17,13 +17,13 @@ public class HealthRoute extends org.apache.camel.builder.RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        from("direct:start")
+        from("direct:readiness")
                 .to("rest:get:/healthz/readiness")
                 .setHeader(CONTENT_TYPE, constant("application/json"))
                 .process(exchange -> setHealthCheckResult(exchange, HealthCheckHelper.invokeReadiness(getContext())))
                 .marshal().json();
 
-        from("direct:start")
+        from("direct:liveliness")
                 .to("rest:get:/healthz/liveliness")
                 .setHeader(CONTENT_TYPE, constant("application/json"))
                 .process(exchange -> setHealthCheckResult(exchange, HealthCheckHelper.invokeLiveness(getContext())))
