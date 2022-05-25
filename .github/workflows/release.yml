@@ -58,7 +58,9 @@ jobs:
           ${{ steps.meta.outputs.labels }}
           EOF
           )
-          labels=${labelsvar//$'\n'/','}
+          lblone=${lavelsvar//$'\n'/'",'}
+          lbltwo=${lblone//$'='/'="'}
+          labels="${lbltwo}\""
           
           echo "debug labels -----------------------------------"
           echo $labels
