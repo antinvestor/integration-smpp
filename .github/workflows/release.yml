@@ -58,7 +58,7 @@ jobs:
           ${{ steps.meta.outputs.labels }}
           EOF
           )
-          lblone=${labelsvar//$'\n'/'",'}
+          lblone=${labelsvar//$'\n'/'" '}
           lbltwo=${lblone//$'='/'="'}
           labels="${lbltwo}\""
           
@@ -68,5 +68,6 @@ jobs:
           ./gradlew jibDockerBuild --image=ghcr.io/${{ github.repository }} \
           -Djib.to.image=ghcr.io/${{ github.repository }} \
           -Djib.to.tags=$tags \
-          -Djib.auth.username=${{ github.repository_owner }} \
-          -Djib.auth.password=${{ secrets.CR_PAT }}
+          -Djib.to.auth.username=${{ github.repository_owner }} \
+          -Djib.to.auth.password=${{ secrets.CR_PAT }} \
+          -Djib.container.labels=$labels 
