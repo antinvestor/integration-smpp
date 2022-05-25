@@ -3,8 +3,10 @@ package com.antinvestor.integration.smpp;
 import org.apache.camel.Exchange;
 import org.apache.camel.health.HealthCheck;
 import org.apache.camel.health.HealthCheckHelper;
+import org.apache.camel.model.rest.ResponseMessageDefinition;
 
 import java.util.Collection;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import static org.apache.camel.Exchange.HTTP_RESPONSE_CODE;
@@ -16,13 +18,13 @@ public class HealthRoute extends org.apache.camel.builder.RouteBuilder {
     public void configure() throws Exception {
 
         from("direct:start")
-                .to("rest:get:/health/readiness")
+                .to("rest:get:/healthz/readiness")
                 .setHeader(CONTENT_TYPE, constant("application/json"))
                 .process(exchange -> setHealthCheckResult(exchange, HealthCheckHelper.invokeReadiness(getContext())))
                 .marshal().json();
 
         from("direct:start")
-                .to("rest:get:/health/liveliness")
+                .to("rest:get:/healthz/liveliness")
                 .setHeader(CONTENT_TYPE, constant("application/json"))
                 .process(exchange -> setHealthCheckResult(exchange, HealthCheckHelper.invokeLiveness(getContext())))
                 .marshal().json();
@@ -35,6 +37,9 @@ public class HealthRoute extends org.apache.camel.builder.RouteBuilder {
         if (results.stream().anyMatch(it -> it.getState() != HealthCheck.State.UP)) {
             exchange.getMessage().setHeader(HTTP_RESPONSE_CODE, 503);
         }
-        exchange.getMessage().setBody(results.stream().map(HealthCheck.Result::getDetails).collect(Collectors.toList()));
+        exchange.getMessage()
+                .setBody(results.stream()
+                        .map(HealthCheck.Result::getDetails)
+                        .collect(Collectors.toList()));
     }
 }

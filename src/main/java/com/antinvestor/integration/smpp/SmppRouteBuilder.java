@@ -43,7 +43,7 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
                 .to(getRouteConnector());
 
         String pullQueueSecondaryUrl = configs.getString(Constants.PULL_QUEUE_SECONDARY_URL);
-        if (TextUtils.isEmpty(pullQueueSecondaryUrl)) {
+        if (!TextUtils.isBlank(pullQueueSecondaryUrl)) {
             from(pullQueueSecondaryUrl)
                     .unmarshal().json()
                     .split(body()).parallelProcessing()
@@ -52,7 +52,7 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
         }
 
         String pullQueueTertiaryUrl = configs.getString(Constants.PULL_QUEUE_TERTIARY_URL);
-        if (TextUtils.isEmpty(pullQueueTertiaryUrl)) {
+        if (!TextUtils.isBlank(pullQueueTertiaryUrl)) {
             from(pullQueueTertiaryUrl)
                     .unmarshal().json()
                     .split(body()).parallelProcessing()
