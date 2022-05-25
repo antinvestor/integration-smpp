@@ -42,17 +42,11 @@ jobs:
             type=sha
             type=sha,format=long
 
-      # Setting up Docker Builder
-      - name: Set up Docker Builder
-        uses: docker/setup-buildx-action@v2
-        with:
-          install: true
-
       - name: Compile, build and push image with Jib
         run: |
           
-          tags=$(echo ${{ steps.meta.outputs.tags }} | sed 's/\\n/,/g')
-          labels=$(echo ${{ steps.meta.outputs.labels }} | sed 's/\\n/,/g')
+          tags=$(echo "${{ steps.meta.outputs.tags }}" | sed 's/\\n/,/g')
+          labels=$(echo "${{ steps.meta.outputs.labels }}" | sed 's/\\n/,/g')
           
           ./gradlew jibDockerBuild --image=ghcr.io/${{ github.repository }} \
           -Djib.to.image=ghcr.io/${{ github.repository }} \
