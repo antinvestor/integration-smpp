@@ -45,29 +45,30 @@ jobs:
       - name: Compile, build and push image with Jib
         run: |
           
-          tagsvar=$(cat <<EOF
+          tags=$(cat <<EOF
           ${{ steps.meta.outputs.tags }}
           EOF
           )
-          tags=${tagsvar//$'\n'/','}
+          tags=${tags//$'\n'/','}
+          tags=${tags//$'ghcr.io/antinvestor/integration-smpp:'/''}
           
           echo "debug tags -----------------------------------"
           echo $tags
 
-          labelsvar=$(cat <<EOF
+          labels=$(cat <<EOF
           ${{ steps.meta.outputs.labels }}
           EOF
           )
-          lblone=${labelsvar//$'\n'/'",'}
-          lbltwo=${lblone//$'='/'="'}
-          labels="${lbltwo}\""
+          labels=${labels//$'\n'/'",'}
+          labels=${labels//$'='/'="'}
+          labels="${labels}\""
           
           echo "debug labels -----------------------------------"
           echo $labels
           
           ./gradlew jibDockerBuild --image=ghcr.io/${{ github.repository }} \
           -Djib.to.image=ghcr.io/${{ github.repository }} \
-          -Djib.to.tags=$tags \
+          -Djib.to.tags="${tags}" \
           -Djib.to.auth.username=${{ github.repository_owner }} \
           -Djib.to.auth.password=${{ secrets.CR_PAT }} \
           -Djib.container.labels="${labels}" 
