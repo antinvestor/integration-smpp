@@ -1,80 +1,70 @@
-name: Manually create a release
+name: Release a new docker image from build
 
 on:
-
-  workflow_dispatch:
-    inputs:
-      description:
-        description: 'Short explanation of the release'
-        required: true
-
-env:
-  IMAGE_NAME: integration-smpp
+  create:
+    tags:
+      - "v*.*.*"
+  push:
+    tags:
+      - "v*.*.*"
 
 jobs:
 
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Initialize mandatory git config
-      run: |
-        git config user.name "GitHub Actions"
-        git config user.email noreply@github.com
-    - name: Setup release information
-      run: |
-        versionName=`sed '1q;d' versions.txt | cut -d "=" -f2 | xargs`
-        export VERSION_NAME=$versionName
-        echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
-        export NEXT_VERSION_NAME=$(echo ${VERSION_NAME} | awk -F. -v OFS=. '{$NF++;print}')
-        echo "NEXT_VERSION_NAME=$NEXT_VERSION_NAME" >> $GITHUB_ENV
-    - name: Change version number and name
-      run: printf 'image_version = ${{ env.NEXT_VERSION_NAME }}\n' > versions.txt
-    - name: Commit the version manifest files
-      id: make-commit
-      run: |
-        git add versions.txt
-        git commit --message "bump release version ${{ github.event.inputs.description }}"
-        echo "::set-output name=commit::$(git rev-parse HEAD)"
-    - name: Push changes
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: ${{ github.ref }}
-    - name: Tag our release to freeze time
-      id: make-release-tag
-      run: |
-        git tag -a v${{ env.VERSION_NAME }} -m "${{ github.event.inputs.description }}"
-    - name: Push release tags
-      run: git push origin v${{ env.VERSION_NAME }}
+      - name: Checkout code for performing a release
+        uses: actions/checkout@v3
 
-    - name: Setup jdk for compilation and docker release build version
-      uses: actions/setup-java@v1
-      with:
-        java-version: '11'
-    - name: Compile with Gradle
-      run: ./gradlew jibDockerBuild --image=ghcr.io/${{ github.repository }}
+      - name: Setup jdk for compilation and docker release build version
+        uses: actions/setup-java@v1
+        with:
+          java-version: '17'
+      - name: Compile with Gradle
+        run: ./gradlew jibDockerBuild --image=ghcr.io/${{ github.repository }}
 
-    - name: Log into GitHub Container Registry
-      run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
 
-    - name: Push image to GitHub Container Registry
-      run: |
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=true
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{raw}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value={{tag}}
+            type=sha
+            type=sha,format=long
 
-        # Change all uppercase to lowercase
-        IMAGE_ID=$(echo ghcr.io/${{ github.repository }} | tr '[A-Z]' '[a-z]')
+      # Setting up Docker Builder
+      - name: Set up Docker Builder
+        uses: docker/setup-buildx-action@v2
 
-        echo IMAGE_ID=$IMAGE_ID
+      # Set Github Access Token with "write:packages & read:packages" scope for Github Container Registry.
+      # Then go to repository setings and add the copied token as a secret called "CR_PAT"
+      # https://github.com/settings/tokens/new?scopes=repo,write:packages&description=Github+Container+Registry
+      # ! While GHCR is in Beta make sure to enable the feature
+      - name: Logging into GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
 
-        docker tag ghcr.io/${{ github.repository }} $IMAGE_ID:${{ github.sha }}
-        docker tag $IMAGE_ID:${{ github.sha }} $IMAGE_ID:v${{ env.VERSION_NAME }}
-        docker tag $IMAGE_ID:${{ github.sha }} $IMAGE_ID:latest
-
-        docker push $IMAGE_ID:${{ github.sha }}
-        docker push $IMAGE_ID:v${{ env.VERSION_NAME }}
-        docker push $IMAGE_ID:latest
-
-    - name: Print Full Image URL
-      run: echo ghcr.io/${{ github.repository }}:${{ github.sha }}
+      # Push to Github Container Registry
+      - name: Pushing Image to Github Container Registry
+        uses: docker/build-push-action@v3
+        with:
+          context: ./
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
