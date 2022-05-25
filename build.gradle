@@ -23,8 +23,8 @@ repositories {
 dependencies {
 
 
-    api(platform('org.apache.camel:camel-bom:3.16.0'))
-    api(platform("io.grpc:grpc-bom:1.46.0"))
+    implementation platform('org.apache.camel:camel-bom:3.16.0')
+    implementation platform("io.grpc:grpc-bom:1.46.0")
     implementation 'org.apache.camel:camel-core'
     implementation 'org.apache.camel:camel-main'
     implementation 'org.apache.camel:camel-health'
@@ -51,7 +51,7 @@ dependencies {
 
 jib {
     // Copies files from 'src/main/custom-extra-dir' and '/home/user/jib-extras' instead of 'src/main/jib'
-    extraDirectories {
+    extraDirectories{
         paths {
             path {
                 // copies the contents of 'src/main/another/dir' into '/extras' on the container
