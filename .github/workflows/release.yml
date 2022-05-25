@@ -58,7 +58,7 @@ jobs:
           ${{ steps.meta.outputs.labels }}
           EOF
           )
-          lblone=${lavelsvar//$'\n'/'",'}
+          lblone=${labelsvar//$'\n'/'",'}
           lbltwo=${lblone//$'='/'="'}
           labels="${lbltwo}\""
           
