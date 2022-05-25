@@ -50,13 +50,18 @@ jobs:
           EOF
           )
           tags=${tagsvar//$'\n'/','}
-  
+          
+          echo "debug tags -----------------------------------"
+          echo $tags
 
           labelsvar=$(cat <<EOF
           ${{ steps.meta.outputs.labels }}
           EOF
           )
           labels=${labelsvar//$'\n'/','}
+          
+          echo "debug labels -----------------------------------"
+          echo $labels
           
           ./gradlew jibDockerBuild --image=ghcr.io/${{ github.repository }} \
           -Djib.to.image=ghcr.io/${{ github.repository }} \
