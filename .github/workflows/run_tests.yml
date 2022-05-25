@@ -11,36 +11,14 @@ jobs:
     steps:
       - name: Checkout new code for testing
         uses: actions/checkout@v3
-      - name: Setup go testing infrastructure
-        uses: actions/setup-go@v3
+
+      - uses: actions/setup-java@v3
         with:
-          go-version: '1.18'
+          java-version: '17'
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Run the Gradle package task
+        uses: gradle/gradle-build-action@v2
 
-      - name: Install dependencies
-        run: |
-          go version
-
-      - name: Build the docker-compose stack
-        run: docker-compose -f "tests_runner/docker-compose.yml" build
-
-      - name: Run the docker-compose stack
-        run: docker-compose -f "tests_runner/docker-compose.yml" up -d
-
-      - name: Wait for postgresql to come up
-        run: count=0; while ! nc -z localhost 5424 && [[ count -lt 30 ]]; do (( count += 1 )); sleep 1; echo "waiting for postgresql $count"; done;
-
-      - name: Allow 10 seconds for migrations to complete if any
-        run: sleep 10s
-
-      - name: Display the docker-compose stack logs
-        run: docker-compose -f "tests_runner/docker-compose.yml" logs
-
-      - name: Test files service
-        run: go test  ./...
-
-      - name: Run Vet & Lint
-        run: |
-          go vet .
-
-      - name: Stop containers
-        run: docker-compose -f "tests_runner/docker-compose.yml" down
+      - name: Execute Gradle build
+        run: ./gradlew build

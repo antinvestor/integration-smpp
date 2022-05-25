@@ -11,10 +11,9 @@ version 'v1.0.0'
 sourceCompatibility = 1.17
 targetCompatibility = 1.17
 
-mainClassName = 'com.antinvestor.integration.smpp.Application'
 
 application {
-    mainClassName = 'com.antinvestor.integration.smpp.Application'
+    mainClass.set('com.antinvestor.integration.smpp.Application')
 }
 
 repositories {
@@ -40,7 +39,7 @@ dependencies {
     implementation group: 'org.apache.commons', name: 'commons-configuration2', version: '2.7'
     implementation group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.4'
 
-    implementation group: 'ch.qos.logback', name :'logback-core', version: '1.2.11.1'
+    implementation group: 'ch.qos.logback', name :'logback-core', version: '1.2.11'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
