@@ -58,7 +58,7 @@ jobs:
           ${{ steps.meta.outputs.labels }}
           EOF
           )
-          lblone=${labelsvar//$'\n'/'" '}
+          lblone=${labelsvar//$'\n'/'",'}
           lbltwo=${lblone//$'='/'="'}
           labels="${lbltwo}\""
           
@@ -70,4 +70,4 @@ jobs:
           -Djib.to.tags=$tags \
           -Djib.to.auth.username=${{ github.repository_owner }} \
           -Djib.to.auth.password=${{ secrets.CR_PAT }} \
-          -Djib.container.labels=$labels 
+          -Djib.container.labels="${labels}" 
