@@ -65,5 +65,8 @@ jobs:
       # Push to Github Container Registry
       - name: Pushing Image to Github Container Registry
         run: |
-          echo -e "${{ steps.meta.outputs.tags }}" | xargs -I{} docker tag ghcr.io/${{ github.repository }}:latest {}
-          echo -e "${{ steps.meta.outputs.tags }}" | xargs -I{} docker push {}
+          echo "Starting image tagging"
+          echo -e "${{ steps.meta.outputs.tags }}\n" | xargs -I{} docker tag ghcr.io/${{ github.repository }}:latest {}
+          echo "successfully managed to tag images"
+          echo -e "${{ steps.meta.outputs.tags }}\n" | xargs -I{} docker push {}
+          echo "We successfully managed to push images"
