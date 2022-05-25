@@ -84,4 +84,6 @@ jobs:
           -Djib.to.auth.password=${{ secrets.CR_PAT }} \
           -Djib.container.labels="${labels}" 
           
-          docker push ghcr.io/${{ github.repository }}:latest
+          echo "Starting image push"
+          echo -e "${{ steps.meta.outputs.tags }}" | xargs -I{} docker push {}
+          
