@@ -48,6 +48,8 @@ jobs:
       # Setting up Docker Builder
       - name: Set up Docker Builder
         uses: docker/setup-buildx-action@v2
+        with:
+          install: true
 
       # Set Github Access Token with "write:packages & read:packages" scope for Github Container Registry.
       # Then go to repository setings and add the copied token as a secret called "CR_PAT"
@@ -62,9 +64,6 @@ jobs:
 
       # Push to Github Container Registry
       - name: Pushing Image to Github Container Registry
-        uses: docker/build-push-action@v3
-        with:
-          context: ./
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+        run: |
+          echo -e "${{ steps.meta.outputs.tags }}" | xargs -I{} docker tag ghcr.io/${{ github.repository }}:latest {}
+          echo -e "${{ steps.meta.outputs.tags }}" | xargs -I{} docker push {}
