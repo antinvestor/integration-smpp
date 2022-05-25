@@ -68,6 +68,5 @@ jobs:
           ./gradlew jibDockerBuild --image=ghcr.io/${{ github.repository }} \
           -Djib.to.image=ghcr.io/${{ github.repository }} \
           -Djib.to.tags=$tags \
-          -Djib.container.labels=$labels \
           -Djib.auth.username=${{ github.repository_owner }} \
           -Djib.auth.password=${{ secrets.CR_PAT }}
