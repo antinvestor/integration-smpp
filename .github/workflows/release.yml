@@ -21,9 +21,6 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: '17'
-      - name: Compile with Gradle
-        run: ./gradlew jibDockerBuild --image=ghcr.io/${{ github.repository }}
-
 
       - name: Docker meta
         id: meta
@@ -51,22 +48,15 @@ jobs:
         with:
           install: true
 
-      # Set Github Access Token with "write:packages & read:packages" scope for Github Container Registry.
-      # Then go to repository setings and add the copied token as a secret called "CR_PAT"
-      # https://github.com/settings/tokens/new?scopes=repo,write:packages&description=Github+Container+Registry
-      # ! While GHCR is in Beta make sure to enable the feature
-      - name: Logging into GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.CR_PAT }}
-
-      # Push to Github Container Registry
-      - name: Pushing Image to Github Container Registry
+      - name: Compile, build and push image with Jib
         run: |
-          echo "Starting image tagging"
-          echo -e "${{ steps.meta.outputs.tags }}\n" | xargs -I{} docker tag ghcr.io/${{ github.repository }}:latest {}
-          echo "successfully managed to tag images"
-          echo -e "${{ steps.meta.outputs.tags }}\n" | xargs -I{} docker push {}
-          echo "We successfully managed to push images"
+          
+          tags=$(echo ${{ steps.meta.outputs.tags }} | sed 's/\\n/,/g')
+          labels=$(echo ${{ steps.meta.outputs.tags }} | sed 's/\\n/,/g')
+          
+          ./gradlew jibDockerBuild --image=ghcr.io/${{ github.repository }} \
+          -Djib.to.image=ghcr.io/${{ github.repository }} \
+          -Djib.to.tags=$tags \
+          -Djib.container.labels=$labels \
+          -Djib.auth.username=${{ github.repository_owner }} \
+          -Djib.auth.password=${{ secrets.CR_PAT }}
