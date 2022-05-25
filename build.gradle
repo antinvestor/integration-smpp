@@ -22,25 +22,27 @@ repositories {
 
 dependencies {
 
-    implementation group: 'org.apache.camel', name: 'camel-core', version: '3.16.0'
-    implementation group: 'org.apache.camel', name: 'camel-main', version: '3.16.0'
-    implementation group: 'org.apache.camel', name: 'camel-health', version: '3.16.0'
-    implementation group: 'org.apache.camel', name: 'camel-management', version: '3.16.0'
-    implementation group: 'org.apache.camel', name: 'camel-rest', version: '3.16.0'
-    implementation group: 'org.apache.camel', name: 'camel-netty-http', version: '3.16.0'
-    implementation group: 'org.apache.camel', name: 'camel-http', version: '3.16.0'
-    implementation group: 'org.apache.camel', name: 'camel-jackson', version: '3.16.0'
-    implementation group: 'org.apache.camel', name: 'camel-opentelemetry', version: '3.16.0'
-    implementation group: 'org.apache.camel', name: 'camel-log', version: '3.16.0'
-    implementation group: 'org.apache.camel', name: 'camel-nats', version: '3.16.0'
-    implementation group: 'org.apache.camel', name: 'camel-google-pubsub', version: '3.16.0'
-    implementation group: 'org.apache.camel', name: 'camel-smpp', version: '3.16.0'
 
-    implementation group: 'org.apache.commons', name: 'commons-configuration2', version: '2.7'
-    implementation group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.4'
+    implementation platform('org.apache.camel:camel-bom:3.16.0')
+    implementation 'org.apache.camel:camel-core'
+    implementation 'org.apache.camel:camel-main'
+    implementation 'org.apache.camel:camel-health'
+    implementation 'org.apache.camel:camel-management'
+    implementation 'org.apache.camel:camel-rest'
+    implementation 'org.apache.camel:camel-netty-http'
+    implementation 'org.apache.camel:camel-http'
+    implementation 'org.apache.camel:camel-jackson'
+    implementation 'org.apache.camel:camel-opentelemetry'
+    implementation 'org.apache.camel:camel-log'
+    implementation 'org.apache.camel:camel-nats'
+    implementation 'org.apache.camel:camel-google-pubsub'
+    implementation 'org.apache.camel:camel-smpp'
 
-    implementation group: 'ch.qos.logback', name :'logback-core', version: '1.2.11'
-    implementation group: 'ch.qos.logback', name :'logback-classic', version: '1.2.11'
+    implementation 'org.apache.commons:commons-configuration2:2.7'
+    implementation 'commons-beanutils:commons-beanutils:1.9.4'
+
+    implementation 'ch.qos.logback:logback-core:1.2.11'
+    implementation 'ch.qos.logback:logback-classic:1.2.11'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
@@ -67,8 +69,4 @@ test {
     exclude '**/*IntegrationSpec.*'
 }
 
-task integrationTest(type: Test, description: 'Runs the integration tests', group: 'Verification') {
-    include '**/*IntegrationTest.*'
-    include '**/*IntegrationSpec.*'
-}
 
