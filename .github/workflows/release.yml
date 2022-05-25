@@ -45,8 +45,16 @@ jobs:
       - name: Compile, build and push image with Jib
         run: |
           
-          tags=$(echo "${{ steps.meta.outputs.tags }}" | sed 's/\\n/,/g')
-          labels=$(echo "${{ steps.meta.outputs.labels }}" | sed 's/\\n/,/g')
+          read -r -d '' tagstr << EOM 
+          ${{ steps.meta.outputs.tags }}
+          EOM
+          
+          read -r -d '' labelstr << EOM 
+          ${{ steps.meta.outputs.labels }}
+          EOM
+          
+          tags=$(echo $tagstr | sed 's/\\n/,/g')
+          labels=$(echo $labelstr | sed 's/\\n/,/g')
           
           ./gradlew jibDockerBuild --image=ghcr.io/${{ github.repository }} \
           -Djib.to.image=ghcr.io/${{ github.repository }} \
