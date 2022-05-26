@@ -6,6 +6,7 @@ import org.apache.camel.Processor;
 import org.apache.camel.component.smpp.SmppConstants;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.rest.RestBindingMode;
+import org.apache.camel.util.ObjectHelper;
 import org.apache.commons.configuration2.CompositeConfiguration;
 import org.apache.commons.configuration2.EnvironmentConfiguration;
 import org.apache.commons.configuration2.INIConfiguration;
@@ -20,6 +21,7 @@ import java.util.Map;
 
 public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
     private final String ROUTE_ID_HEAD = "route_id_head";
+    private final String INTERNAL_SYSTEM_MESSAGE_ID = "INTERNAL_SYSTEM_MESSAGE_ID";
 
     private String getRouteConnector() {
         return "direct:gateway-sms-route";
@@ -53,7 +55,7 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
                     in.setHeader(ROUTE_ID_HEAD, getLastMileRoute(configs, body.get(configs.getString(Constants.FIELD_ROUTE_ID))));
                     in.setHeader(SmppConstants.DEST_ADDR, body.get(configs.getString(Constants.FIELD_TO)));
                     in.setHeader(SmppConstants.SOURCE_ADDR, body.get(configs.getString(Constants.FIELD_FROM)));
-                    in.setHeader("INTERNAL_SYSTEM_MESSAGE_ID", body.get(configs.getString(Constants.FIELD_MESSAGE_ID)));
+                    in.setHeader(INTERNAL_SYSTEM_MESSAGE_ID, body.get(configs.getString(Constants.FIELD_MESSAGE_ID)));
                     in.setBody(body.get(configs.getString(Constants.FIELD_DATA)));
 
                 }).log(LoggingLevel.INFO, "Outbound message : ${in.headers.CamelSmppMessageType} to : ${in.headers.CamelSmppDestAddr}")
@@ -86,13 +88,16 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
                 Map<String, String> result = new HashMap<>();
                 result.put(configs.getString(Constants.FIELD_TO), in.getHeader(SmppConstants.DEST_ADDR, String.class));
                 result.put(configs.getString(Constants.FIELD_FROM), in.getHeader(SmppConstants.DEST_ADDR, String.class));
-                result.put(configs.getString(Constants.FIELD_MESSAGE_ID), in.getHeader("INTERNAL_SYSTEM_MESSAGE_ID", String.class));
+                result.put(configs.getString(Constants.FIELD_MESSAGE_ID), in.getHeader(INTERNAL_SYSTEM_MESSAGE_ID, String.class));
                 result.put(configs.getString(Constants.FIELD_SMSC_ID), smppID);
                 result.put(configs.getString(Constants.FIELD_SMSC_STATUS), "Submitted");
 
                 in.setBody(result, Map.class);
 
-            }).choice().when(exchange -> configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_ACK_URL)).startsWith("http")).marshal().json().to(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_ACK_URL))).otherwise().to(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_ACK_URL))).endChoice();
+            }).marshal().json().choice()
+                    .when(exchange -> ObjectHelper.isNotEmpty(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_ACK_URL))))
+                        .to(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_ACK_URL)))
+                    .endChoice();
 
             from(smppConnectionRoute).log(LoggingLevel.INFO, "Inbound message : ${in.headers.CamelSmppMessageType} for : ${in.headers.CamelSmppSourceAddr} ${in.headers.CamelSmppId}").bean((Processor) exchange -> {
                 Message in = exchange.getIn();
