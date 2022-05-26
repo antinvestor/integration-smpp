@@ -1,5 +1,6 @@
 package com.antinvestor.integration.smpp;
 
+import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
@@ -76,27 +77,32 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
 
 
             long throttlingCount = configs.getLong(getRouteConfigName(activeRoute, Constants.ROUTE_THROTTLING_COUNT));
-            from(getLastMileRoute(configs, activeRoute)).throttle(throttlingCount).enrich(smppConnectionRoute, new PreserveHeadersAggregationStrategy()).bean((Processor) exchange -> {
-                Message in = exchange.getIn();
+            from(getLastMileRoute(configs, activeRoute))
+                    .throttle(throttlingCount)
+                    .enrich(smppConnectionRoute, new PreserveHeadersAggregationStrategy())
+                    .bean((Processor) exchange -> {
+                        Message in = exchange.getIn();
 
 
-                String smppID = in.getHeader(SmppConstants.ID, String.class);
-                if (!TextUtils.isBlank(smppID)) {
-                    smppID = smppID.replace("[", "").replace("]", "");
-                }
+                        String smppID = in.getHeader(SmppConstants.ID, String.class);
+                        if (!TextUtils.isBlank(smppID)) {
+                            smppID = smppID.replace("[", "").replace("]", "");
+                        }
 
-                Map<String, String> result = new HashMap<>();
-                result.put(configs.getString(Constants.FIELD_TO), in.getHeader(SmppConstants.DEST_ADDR, String.class));
-                result.put(configs.getString(Constants.FIELD_FROM), in.getHeader(SmppConstants.DEST_ADDR, String.class));
-                result.put(configs.getString(Constants.FIELD_MESSAGE_ID), in.getHeader(INTERNAL_SYSTEM_MESSAGE_ID, String.class));
-                result.put(configs.getString(Constants.FIELD_SMSC_ID), smppID);
-                result.put(configs.getString(Constants.FIELD_SMSC_STATUS), "Submitted");
+                        Map<String, String> result = new HashMap<>();
+                        result.put(configs.getString(Constants.FIELD_TO), in.getHeader(SmppConstants.DEST_ADDR, String.class));
+                        result.put(configs.getString(Constants.FIELD_FROM), in.getHeader(SmppConstants.DEST_ADDR, String.class));
+                        result.put(configs.getString(Constants.FIELD_MESSAGE_ID), in.getHeader(INTERNAL_SYSTEM_MESSAGE_ID, String.class));
+                        result.put(configs.getString(Constants.FIELD_SMSC_ID), smppID);
+                        result.put(configs.getString(Constants.FIELD_SMSC_STATUS), "Submitted");
 
-                in.setBody(result, Map.class);
+                        in.setBody(result, Map.class);
 
-            }).marshal().json().choice()
+                    })
+                    .removeHeaders("CamelHttp*")
+                    .marshal().json().choice()
                     .when(exchange -> ObjectHelper.isNotEmpty(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_ACK_URL))))
-                        .to(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_ACK_URL)))
+                    .to(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_ACK_URL)))
                     .endChoice();
 
             from(smppConnectionRoute).log(LoggingLevel.INFO, "Inbound message : ${in.headers.CamelSmppMessageType} for : ${in.headers.CamelSmppSourceAddr} ${in.headers.CamelSmppId}").bean((Processor) exchange -> {
