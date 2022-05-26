@@ -69,14 +69,28 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
                 continue;
             }
 
-            String smppConnectionRoute = String.format("smpp://%s@%s:%s?password=%s&enquireLinkTimer=%s&transactionTimer=%s" + "&destAddrNpi=%s&destAddrTon=%s&sourceAddrNpi=%s&sourceAddrTon=%s" + "&systemType=%s&priorityFlag=%s&registeredDelivery=%s", configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_USERNAME)),
-
-                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_HOST)), configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_PORT)),
-
-                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_PASSWORD)), configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_ENQUIRE_LINK_TIME)), configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_TRANSACTION_TIME)), configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_DESTINATION_ADDRESS_NPI)), configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_DESTINATION_ADDRESS_TON)), configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SOURCE_ADDRESS_NPI)), configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SOURCE_ADDRESS_TON)), configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SYSTEM_TYPE)), configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_PRIORITY_FLAG)), configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_REGISTER_DELIVERY)));
+            String smppConnectionRoute = String.format(
+                    "smpp://%s@%s:%s?password=%s&enquireLinkTimer=%s&transactionTimer=%s"
+                            + "&destAddrNpi=%s&destAddrTon=%s&sourceAddrNpi=%s&sourceAddrTon=%s"
+                            + "&systemType=%s&priorityFlag=%s&registeredDelivery=%s",
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_USERNAME)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_HOST)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_PORT)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_PASSWORD)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_ENQUIRE_LINK_TIME)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_TRANSACTION_TIME)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_DESTINATION_ADDRESS_NPI)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_DESTINATION_ADDRESS_TON)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SOURCE_ADDRESS_NPI)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SOURCE_ADDRESS_TON)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SYSTEM_TYPE)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_PRIORITY_FLAG)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_REGISTER_DELIVERY)));
 
 
             long throttlingCount = configs.getLong(getRouteConfigName(activeRoute, Constants.ROUTE_THROTTLING_COUNT));
+
+
             from(getLastMileRoute(configs, activeRoute))
                     .throttle(throttlingCount)
                     .enrich(smppConnectionRoute, new PreserveHeadersAggregationStrategy())
@@ -99,67 +113,89 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
                         in.setBody(result, Map.class);
 
                     })
+                    .to("seda:asyncMessageTerminationAck");
+
+            from(smppConnectionRoute).log(LoggingLevel.INFO, "Inbound message : ${in.headers.CamelSmppMessageType} for : ${in.headers.CamelSmppSourceAddr} ${in.headers.CamelSmppId}").bean((Processor) exchange -> {
+                        Message in = exchange.getIn();
+
+                        Map<String, String> result = new HashMap<>();
+
+                        if (in.getHeaders().containsKey(SmppConstants.ID)) {
+                            result.put(configs.getString(Constants.FIELD_SMSC_ID), in.getHeader(SmppConstants.ID, String.class));
+                        } else if (in.getHeaders().containsKey(SmppConstants.SEQUENCE_NUMBER)) {
+                            result.put(configs.getString(Constants.FIELD_SMSC_ID), in.getHeader(SmppConstants.SEQUENCE_NUMBER, String.class));
+                        }
+
+                        if (in.getHeaders().containsKey(SmppConstants.FINAL_STATUS)) {
+                            result.put(configs.getString(Constants.FIELD_SMSC_STATUS), in.getHeader(SmppConstants.FINAL_STATUS, String.class));
+                        }
+
+                        if (in.getHeaders().containsKey(SmppConstants.DELIVERED)) {
+                            result.put("dlvrd", in.getHeader(SmppConstants.DELIVERED, String.class));
+                        }
+
+
+                        if (in.getHeaders().containsKey(SmppConstants.DELIVERED)) {
+                            result.put("dlvrd", in.getHeader(SmppConstants.DELIVERED, String.class));
+                        }
+
+                        if (in.getHeaders().containsKey(SmppConstants.SUBMITTED)) {
+                            result.put("sub", in.getHeader(SmppConstants.SUBMITTED, String.class));
+                        }
+
+                        if (in.getHeaders().containsKey(SmppConstants.SUBMIT_DATE)) {
+                            result.put("submitted_date", in.getHeader(SmppConstants.SUBMIT_DATE, String.class));
+                        }
+
+                        if (in.getHeaders().containsKey(SmppConstants.DONE_DATE)) {
+                            result.put("done_date", in.getHeader(SmppConstants.DONE_DATE, String.class));
+                        }
+
+
+                        if (in.getHeaders().containsKey(SmppConstants.OPTIONAL_PARAMETERS)) {
+                            result.put("smsc_extra", in.getHeader(SmppConstants.OPTIONAL_PARAMETERS, String.class));
+                        }
+
+
+                        if (in.getHeaders().containsKey(SmppConstants.DEST_ADDR)) {
+                            result.put(configs.getString(Constants.FIELD_TO), in.getHeader(SmppConstants.DEST_ADDR, String.class));
+                        }
+
+                        if (in.getHeaders().containsKey(SmppConstants.SOURCE_ADDR)) {
+                            result.put(configs.getString(Constants.FIELD_FROM), in.getHeader(SmppConstants.SOURCE_ADDR, String.class));
+                        }
+
+                        result.put("text", in.getBody(String.class));
+
+                        in.setBody(result, Map.class);
+
+                    }).marshal().json(JsonLibrary.Jackson)
+                    .choice().when(header(SmppConstants.MESSAGE_TYPE).isEqualTo("DeliveryReceipt"))
+                    .to("seda:asyncMessageDeliveryReceipt")
+                    .otherwise()
+                    .to("seda:asyncMessageOriginatedHandler")
+                    .endChoice();
+
+
+            from("seda:asyncMessageTerminationAck?waitForTaskToComplete=Always")
                     .removeHeaders("CamelHttp*")
                     .marshal().json().choice()
                     .when(exchange -> ObjectHelper.isNotEmpty(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_ACK_URL))))
                     .to(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_ACK_URL)))
                     .endChoice();
 
-            from(smppConnectionRoute).log(LoggingLevel.INFO, "Inbound message : ${in.headers.CamelSmppMessageType} for : ${in.headers.CamelSmppSourceAddr} ${in.headers.CamelSmppId}").bean((Processor) exchange -> {
-                Message in = exchange.getIn();
-
-                Map<String, String> result = new HashMap<>();
-
-                if (in.getHeaders().containsKey(SmppConstants.ID)) {
-                    result.put(configs.getString(Constants.FIELD_SMSC_ID), in.getHeader(SmppConstants.ID, String.class));
-                } else if (in.getHeaders().containsKey(SmppConstants.SEQUENCE_NUMBER)) {
-                    result.put(configs.getString(Constants.FIELD_SMSC_ID), in.getHeader(SmppConstants.SEQUENCE_NUMBER, String.class));
-                }
-
-                if (in.getHeaders().containsKey(SmppConstants.FINAL_STATUS)) {
-                    result.put(configs.getString(Constants.FIELD_SMSC_STATUS), in.getHeader(SmppConstants.FINAL_STATUS, String.class));
-                }
-
-                if (in.getHeaders().containsKey(SmppConstants.DELIVERED)) {
-                    result.put("dlvrd", in.getHeader(SmppConstants.DELIVERED, String.class));
-                }
+            from("seda:asyncMessageDeliveryReceipt?waitForTaskToComplete=Always")
+                    .choice()
+                    .when(exchange -> ObjectHelper.isNotEmpty(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_DLR_URL))))
+                    .to(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_DLR_URL)))
+                    .endChoice();
 
 
-                if (in.getHeaders().containsKey(SmppConstants.DELIVERED)) {
-                    result.put("dlvrd", in.getHeader(SmppConstants.DELIVERED, String.class));
-                }
-
-                if (in.getHeaders().containsKey(SmppConstants.SUBMITTED)) {
-                    result.put("sub", in.getHeader(SmppConstants.SUBMITTED, String.class));
-                }
-
-                if (in.getHeaders().containsKey(SmppConstants.SUBMIT_DATE)) {
-                    result.put("submitted_date", in.getHeader(SmppConstants.SUBMIT_DATE, String.class));
-                }
-
-                if (in.getHeaders().containsKey(SmppConstants.DONE_DATE)) {
-                    result.put("done_date", in.getHeader(SmppConstants.DONE_DATE, String.class));
-                }
-
-
-                if (in.getHeaders().containsKey(SmppConstants.OPTIONAL_PARAMETERS)) {
-                    result.put("smsc_extra", in.getHeader(SmppConstants.OPTIONAL_PARAMETERS, String.class));
-                }
-
-
-                if (in.getHeaders().containsKey(SmppConstants.DEST_ADDR)) {
-                    result.put(configs.getString(Constants.FIELD_TO), in.getHeader(SmppConstants.DEST_ADDR, String.class));
-                }
-
-                if (in.getHeaders().containsKey(SmppConstants.SOURCE_ADDR)) {
-                    result.put(configs.getString(Constants.FIELD_FROM), in.getHeader(SmppConstants.SOURCE_ADDR, String.class));
-                }
-
-                result.put("text", in.getBody(String.class));
-
-                in.setBody(result, Map.class);
-
-            }).marshal().json(JsonLibrary.Jackson).choice().when(header(SmppConstants.MESSAGE_TYPE).isEqualTo("DeliveryReceipt")).to(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_SEND_DLR_URL))).otherwise().to(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_RECEIVE_URL))).endChoice();
+            from("seda:asyncMessageOriginatedHandler?waitForTaskToComplete=Always")
+                    .choice()
+                    .when(exchange -> ObjectHelper.isNotEmpty(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_RECEIVE_URL))))
+                    .to(configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SMS_RECEIVE_URL)))
+                    .endChoice();
 
         }
     }
