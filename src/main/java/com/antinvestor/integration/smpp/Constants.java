@@ -13,6 +13,8 @@ public class Constants {
 
     public static final String LAST_MILE_CONNECTION = "LAST_MILE_CONNECTION";
 
+    public static final String QUEUE_PRIORITY_HEADER = "QueuePriority";
+    public static final String PULL_QUEUE_PRIMARY_URL = "PULL_QUEUE_PRIMARY_URL";
     public static final String PULL_QUEUE_SECONDARY_URL = "PULL_QUEUE_SECONDARY_URL";
     public static final String PULL_QUEUE_TERTIARY_URL = "PULL_QUEUE_TERTIARY_URL";
     public static final String ACTIVE_ROUTES = "ACTIVE_ROUTES";
@@ -41,4 +43,6 @@ public class Constants {
     public static final String ROUTE_SMS_RECEIVE_URL = "SMS_RECEIVE_URL";
     public static final String ROUTE_SMS_SEND_DLR_URL = "SMS_SEND_DLR_URL";
     public static final String ROUTE_SMS_SEND_ACK_URL = "SMS_SEND_ACK_URL";
+    public static final String ROUTE_PROCESSING_BATCH_TIMEOUT = "ROUTE_PROCESSING_BATCH_TIMEOUT";
+    public static final String ROUTE_PROCESSING_BATCH_SIZE = "ROUTE_PROCESSING_BATCH_TIMEOUT";
 }

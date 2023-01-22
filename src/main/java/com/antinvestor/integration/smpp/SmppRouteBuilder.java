@@ -1,6 +1,5 @@
 package com.antinvestor.integration.smpp;
 
-import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
@@ -35,20 +34,38 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
 
         restConfiguration().component("netty-http").host("0.0.0.0").port(configs.getInt(Constants.PORT)).bindingMode(RestBindingMode.auto).clientRequestValidation(true);
 
-        rest("/").post().type(Map.class).to(getRouteConnector());
+        rest("/").post().type(Map.class)
+                .to(getRouteConnector());
+
+        String pullQueuePrimaryUrl = configs.getString(Constants.PULL_QUEUE_PRIMARY_URL);
+        if (!TextUtils.isBlank(pullQueuePrimaryUrl)) {
+            from(pullQueuePrimaryUrl).unmarshal().json()
+                    .setHeader(Constants.QUEUE_PRIORITY_HEADER).constant(64)
+                    .to(getRouteConnector());
+
+        }
 
         String pullQueueSecondaryUrl = configs.getString(Constants.PULL_QUEUE_SECONDARY_URL);
         if (!TextUtils.isBlank(pullQueueSecondaryUrl)) {
-            from(pullQueueSecondaryUrl).unmarshal().json().to(getRouteConnector());
+            from(pullQueueSecondaryUrl).unmarshal().json()
+                    .setHeader(Constants.QUEUE_PRIORITY_HEADER).constant(32)
+                    .to(getRouteConnector());
 
         }
 
         String pullQueueTertiaryUrl = configs.getString(Constants.PULL_QUEUE_TERTIARY_URL);
         if (!TextUtils.isBlank(pullQueueTertiaryUrl)) {
-            from(pullQueueTertiaryUrl).unmarshal().json().to(getRouteConnector());
+            from(pullQueueTertiaryUrl).unmarshal().json()
+                    .setHeader(Constants.QUEUE_PRIORITY_HEADER).constant(16)
+                    .to(getRouteConnector());
         }
 
-        from(getRouteConnector()).bean((Processor) exchange -> {
+        from(getRouteConnector())
+                .resequence(header(Constants.QUEUE_PRIORITY_HEADER)).batch()
+                .size(configs.getInt(Constants.ROUTE_PROCESSING_BATCH_SIZE, 30))
+                .timeout(configs.getInt(Constants.ROUTE_PROCESSING_BATCH_TIMEOUT, 1000))
+                .allowDuplicates().reverse()
+                .bean((Processor) exchange -> {
 
                     Message in = exchange.getIn();
                     Map<String, String> body = in.getBody(Map.class);
