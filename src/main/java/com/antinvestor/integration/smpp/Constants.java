@@ -44,5 +44,5 @@ public class Constants {
     public static final String ROUTE_SMS_SEND_DLR_URL = "SMS_SEND_DLR_URL";
     public static final String ROUTE_SMS_SEND_ACK_URL = "SMS_SEND_ACK_URL";
     public static final String ROUTE_PROCESSING_BATCH_TIMEOUT = "ROUTE_PROCESSING_BATCH_TIMEOUT";
-    public static final String ROUTE_PROCESSING_BATCH_SIZE = "ROUTE_PROCESSING_BATCH_TIMEOUT";
+    public static final String ROUTE_PROCESSING_BATCH_SIZE = "ROUTE_PROCESSING_BATCH_SIZE";
 }
