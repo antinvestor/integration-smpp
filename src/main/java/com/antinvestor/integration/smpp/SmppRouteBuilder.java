@@ -27,6 +27,10 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
         return "direct:gateway-sms-route";
     }
 
+    private String getQueueRouteConnector() {
+        return "direct:gateway-async-sms-route";
+    }
+
     @Override
     public void configure() throws Exception {
 
@@ -49,7 +53,7 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
         if (!TextUtils.isBlank(pullQueueSecondaryUrl)) {
             from(pullQueueSecondaryUrl).unmarshal().json()
                     .setHeader(Constants.QUEUE_PRIORITY_HEADER).constant(32)
-                    .to(getRouteConnector());
+                    .to(getQueueRouteConnector());
 
         }
 
@@ -57,14 +61,18 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
         if (!TextUtils.isBlank(pullQueueTertiaryUrl)) {
             from(pullQueueTertiaryUrl).unmarshal().json()
                     .setHeader(Constants.QUEUE_PRIORITY_HEADER).constant(16)
-                    .to(getRouteConnector());
+                    .to(getQueueRouteConnector());
         }
 
-        from(getRouteConnector())
+        from(getQueueRouteConnector())
                 .resequence(header(Constants.QUEUE_PRIORITY_HEADER)).batch()
-                .size(configs.getInt(Constants.ROUTE_PROCESSING_BATCH_SIZE, 30))
+                .size(configs.getInt(Constants.ROUTE_PROCESSING_BATCH_SIZE, 60))
                 .timeout(configs.getInt(Constants.ROUTE_PROCESSING_BATCH_TIMEOUT, 1000))
                 .allowDuplicates().reverse()
+                .to(getRouteConnector());
+
+        from(getRouteConnector())
+                .throttle(configs.getInt(Constants.ROUTE_PROCESSING_BATCH_SIZE, 60)).timePeriodMillis(1000)
                 .bean((Processor) exchange -> {
 
                     Message in = exchange.getIn();
