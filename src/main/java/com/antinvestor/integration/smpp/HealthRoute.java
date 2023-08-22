@@ -3,10 +3,8 @@ package com.antinvestor.integration.smpp;
 import org.apache.camel.Exchange;
 import org.apache.camel.health.HealthCheck;
 import org.apache.camel.health.HealthCheckHelper;
-import org.apache.camel.model.rest.ResponseMessageDefinition;
 
 import java.util.Collection;
-import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import static org.apache.camel.Exchange.HTTP_RESPONSE_CODE;

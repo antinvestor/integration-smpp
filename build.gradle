@@ -23,8 +23,8 @@ repositories {
 dependencies {
 
 
-    implementation platform('org.apache.camel:camel-bom:3.16.0')
-    implementation platform("io.grpc:grpc-bom:1.46.0")
+    implementation platform('org.apache.camel:camel-bom:3.20.6')
+    implementation platform("io.grpc:grpc-bom:1.56.1")
     implementation 'org.apache.camel:camel-core'
     implementation 'org.apache.camel:camel-main'
     implementation 'org.apache.camel:camel-health'
@@ -39,13 +39,13 @@ dependencies {
     implementation 'org.apache.camel:camel-google-pubsub'
     implementation 'org.apache.camel:camel-smpp'
 
-    implementation 'org.apache.commons:commons-configuration2:2.7'
+    implementation 'org.apache.commons:commons-configuration2:2.9.0'
     implementation 'commons-beanutils:commons-beanutils:1.9.4'
 
-    implementation 'ch.qos.logback:logback-core:1.2.11'
-    implementation 'ch.qos.logback:logback-classic:1.2.11'
+    implementation 'ch.qos.logback:logback-core:1.4.8'
+    implementation 'ch.qos.logback:logback-classic:1.4.8'
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }
 

@@ -36,7 +36,11 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
 
         CompositeConfiguration configs = loadConfigs();
 
-        restConfiguration().component("netty-http").host("0.0.0.0").port(configs.getInt(Constants.PORT)).bindingMode(RestBindingMode.auto).clientRequestValidation(true);
+        restConfiguration()
+                .component("netty-http").host("0.0.0.0")
+                .port(configs.getInt(Constants.PORT))
+                .bindingMode(RestBindingMode.auto)
+                .clientRequestValidation(true);
 
         rest("/").post().type(Map.class)
                 .to(getRouteConnector());
@@ -97,7 +101,7 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
             String smppConnectionRoute = String.format(
                     "smpp://%s@%s:%s?password=%s&enquireLinkTimer=%s&transactionTimer=%s"
                             + "&destAddrNpi=%s&destAddrTon=%s&sourceAddrNpi=%s&sourceAddrTon=%s"
-                            + "&systemType=%s&priorityFlag=%s&registeredDelivery=%s",
+                            + "&systemType=%s&priorityFlag=%s&registeredDelivery=%s&splittingPolicy=ALLOW",
                     configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_USERNAME)),
                     configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_HOST)),
                     configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_PORT)),
