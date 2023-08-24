@@ -30,6 +30,7 @@ jobs:
       - name: Setup jdk for compilation and docker release build version
         uses: actions/setup-java@v3
         with:
+          distribution: 'zulu'
           java-version: '17'
 
       - name: Docker meta
