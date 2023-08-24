@@ -2,7 +2,7 @@ plugins {
     id 'java'
     id 'idea'
     id 'application'
-    id 'com.google.cloud.tools.jib' version '3.2.1'
+    id 'com.google.cloud.tools.jib' version '3.3.2'
 }
 
 group 'com.antinvestor.integration'
@@ -23,8 +23,8 @@ repositories {
 dependencies {
 
 
-    implementation platform('org.apache.camel:camel-bom:3.20.6')
-    implementation platform("io.grpc:grpc-bom:1.56.1")
+    implementation platform('org.apache.camel:camel-bom:3.21.0')
+    implementation platform("io.grpc:grpc-bom:1.57.2")
     implementation 'org.apache.camel:camel-core'
     implementation 'org.apache.camel:camel-main'
     implementation 'org.apache.camel:camel-health'
@@ -42,8 +42,8 @@ dependencies {
     implementation 'org.apache.commons:commons-configuration2:2.9.0'
     implementation 'commons-beanutils:commons-beanutils:1.9.4'
 
-    implementation 'ch.qos.logback:logback-core:1.4.8'
-    implementation 'ch.qos.logback:logback-classic:1.4.8'
+    implementation 'ch.qos.logback:logback-core:1.4.11'
+    implementation 'ch.qos.logback:logback-classic:1.4.11'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
