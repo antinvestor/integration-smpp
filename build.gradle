@@ -23,7 +23,7 @@ repositories {
 dependencies {
 
 
-    implementation platform('org.apache.camel:camel-bom:3.20.6')
+    implementation platform('org.apache.camel:camel-bom:3.21.0')
     implementation platform("io.grpc:grpc-bom:1.57.2")
     implementation 'org.apache.camel:camel-core'
     implementation 'org.apache.camel:camel-main'
