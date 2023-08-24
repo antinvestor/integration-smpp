@@ -101,7 +101,8 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
             String smppConnectionRoute = String.format(
                     "smpp://%s@%s:%s?password=%s&enquireLinkTimer=%s&transactionTimer=%s"
                             + "&destAddrNpi=%s&destAddrTon=%s&sourceAddrNpi=%s&sourceAddrTon=%s"
-                            + "&systemType=%s&priorityFlag=%s&registeredDelivery=%s&splittingPolicy=ALLOW",
+                            + "&systemType=%s&priorityFlag=%s&registeredDelivery=%s"
+                            + "&splittingPolicy=%s&dataCoding=%s",
                     configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_USERNAME)),
                     configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_HOST)),
                     configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_PORT)),
@@ -114,7 +115,10 @@ public class SmppRouteBuilder extends org.apache.camel.builder.RouteBuilder {
                     configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SOURCE_ADDRESS_TON)),
                     configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_SYSTEM_TYPE)),
                     configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_PRIORITY_FLAG)),
-                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_REGISTER_DELIVERY)));
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_REGISTER_DELIVERY)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_MESSAGE_SPLITTING_POLICY)),
+                    configs.getString(getRouteConfigName(activeRoute, Constants.ROUTE_MESSAGE_DATA_CODING))
+            );
 
 
             long throttlingCount = configs.getLong(getRouteConfigName(activeRoute, Constants.ROUTE_THROTTLING_COUNT));

@@ -34,6 +34,8 @@ public class Constants {
 
     public static final String ROUTE_DESTINATION_ADDRESS_TON = "DESTINATION_ADDRESS_TON";
     public static final String ROUTE_DESTINATION_ADDRESS_NPI = "DESTINATION_ADDRESS_NPI";
+    public static final String ROUTE_MESSAGE_SPLITTING_POLICY = "MESSAGE_SPLITTING_POLICY";
+    public static final String ROUTE_MESSAGE_DATA_CODING = "MESSAGE_DATA_CODING";
 
     public static final String ROUTE_SYSTEM_TYPE = "SYSTEM_TYPE";
 
