@@ -24,7 +24,7 @@ dependencies {
 
 
     implementation platform('org.apache.camel:camel-bom:3.22.2')
-    implementation platform("io.grpc:grpc-bom:1.66.0")
+    implementation platform("io.grpc:grpc-bom:1.68.0")
     implementation 'org.apache.camel:camel-core'
     implementation 'org.apache.camel:camel-main'
     implementation 'org.apache.camel:camel-health'
