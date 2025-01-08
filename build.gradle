@@ -40,7 +40,7 @@ dependencies {
     implementation 'org.apache.camel:camel-smpp'
 
     implementation 'org.apache.commons:commons-configuration2:2.11.0'
-    implementation 'commons-beanutils:commons-beanutils:1.9.4'
+    implementation 'commons-beanutils:commons-beanutils:1.10.0'
 
     implementation 'ch.qos.logback:logback-core:1.5.16'
     implementation 'ch.qos.logback:logback-classic:1.5.16'
