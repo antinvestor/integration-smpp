@@ -39,7 +39,7 @@ dependencies {
     implementation 'org.apache.camel:camel-google-pubsub'
     implementation 'org.apache.camel:camel-smpp'
 
-    implementation 'org.apache.commons:commons-configuration2:2.11.0'
+    implementation 'org.apache.commons:commons-configuration2:2.12.0'
     implementation 'commons-beanutils:commons-beanutils:1.10.1'
 
     implementation 'ch.qos.logback:logback-core:1.5.18'
